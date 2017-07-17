@@ -14,7 +14,15 @@ import urllib
 from astropy.io import fits
 from astropy.io.fits import getheader
 
-data = np.genfromtxt('hizesp_radec.txt') # Input file containing the catalogue
+#########################################
+# Input text file format: ID RA DEC
+# Edit filename here:
+input_file = "id_ra_dec.txt"
+# Currently, ID must be a number but this
+# will be updated in a future version
+#########################################
+
+data = np.genfromtxt(input_file) # Input file containing the catalogue
 
 objid = np.zeros(len(data))
 ra = np.zeros(len(data))
@@ -22,8 +30,13 @@ dec = np.zeros(len(data))
 
 for i in range(len(data)):
     objid[i] = data[i][0]   # Object ID column in the input table
-    ra[i] = data[i][2]      # RA column
-    dec[i] = data[i][3]     # Dec column
+    ra[i] = data[i][1]      # RA column
+    dec[i] = data[i][2]     # Dec column
+    
+###########################################
+# Choose the size of cutout (degrees)
+cutout_size = 0.1
+###########################################
 
 
 # Build the PS data query script
@@ -43,7 +56,7 @@ for filt in filters:
             print splitline[7]
 
         # Build the url that points to the relevant image in the PS1 server
-        obj = 'USS'+str(objid[i])[:-2]
+        obj = str(objid[i])[:-2]
         outfile_name = obj+'cutout_online.fits'
         url = 'http://ps1images.stsci.edu'+splitline[7]
         os.system('wget %s -O %s' %(url, outfile_name))
@@ -66,7 +79,7 @@ for filt in filters:
         # Finally, create cutout
         cutout_file = obj+'ps1_'+filt+'.fits'
         # Here is where mSubimage and Montage come into the picture
-        os.system('mSubimage %s %s %.2f %.2f 0.05' %(outfile, cutout_file, ra[i], dec[i]))
+        os.system('mSubimage %s %s %.2f %.2f %f' %(outfile, cutout_file, ra[i], dec[i], cutout_size))
 
         os.system('rm %s' %outfile)
 
